@@ -5,12 +5,12 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from sqlalchemy import Column, ForeignKey, UniqueConstraint
-from sqlalchemy.types import DateTime, Float, Integer, String, Text
+from sqlalchemy.types import DateTime, Float, Integer, String, Text, Interval
 
 import datetime
 
 DeclarativeBase = declarative_base()
-engine = create_engine('sqlite:///roumiga.db', echo=True)
+engine = create_engine('sqlite:///roumiga.db', echo=False)
 DeclarativeBase.metadata.create_all(engine, checkfirst=True)
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -35,3 +35,7 @@ class Snapshot(DeclarativeBase):
     @classmethod
     def list(cls):
         return DBSession.query(Snapshot).all()
+
+    @classmethod
+    def from_id(cls, id):
+        return DBSession.query(Snapshot).filter(Snapshot.id==id).one()
