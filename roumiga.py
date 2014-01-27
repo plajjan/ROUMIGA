@@ -10,6 +10,7 @@ from getpass import getpass
 from pprint import pprint
 
 from roumiga.arp import ArpEntry, ArpTable
+from roumiga.bgp import BgpTable, BgpPeer
 from roumiga.node import Node
 import roumiga
 
@@ -21,6 +22,7 @@ class NodeCapture:
         self.password = password
 
         self.arp = []
+        self.bgp = []
 
     def snap(self):
         """ Snap a snapshot!
@@ -56,6 +58,14 @@ class NodeCaptureJnpr(NodeCapture):
             roumiga.session.add(arp_entry)
             self.arp.append(arp_entry)
 
+        # do the BGP dance
+        import jnpr.junos.op.bgp
+        raw_bgp = jnpr.junos.op.bgp.BgpPeerTable(dev)
+        for b in raw_bgp.get():
+            bgp_peer = BgpPeer.from_dict(snapshot, node, b)
+            roumiga.session.add(bgp_peer)
+            self.bgp.append(bgp_peer)
+
         dev.close()
 
 
@@ -64,6 +74,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=
             "Assist in router migrations, upgrades, reboots and similar")
+    parser.add_argument('--create-tables', action="store_true", help="Create tables")
     parser.add_argument('--user', help="Username")
     parser.add_argument('--list-snapshots', action="store_true", help="List snapshots")
     parser.add_argument('--take-snapshot', action="store_true",
@@ -83,6 +94,8 @@ if __name__ == '__main__':
     else:
         password = getpass()
 
+    if args.create_tables:
+        roumiga.DeclarativeBase.metadata.create_all(roumiga.engine, checkfirst=True)
 
     if args.take_snapshot:
         snapshot = roumiga.Snapshot()
@@ -91,7 +104,6 @@ if __name__ == '__main__':
         for node in args.junos_node:
             ncj = NodeCaptureJnpr(snapshot, node, user, password)
             ncj.snap()
-        roumiga.DeclarativeBase.metadata.create_all(roumiga.engine, checkfirst=True)
         roumiga.session.commit()
 
     if args.summary:
