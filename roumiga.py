@@ -59,8 +59,8 @@ class NodeCaptureJnpr(NodeCapture):
             self.arp.append(arp_entry)
 
         # do the BGP dance
-        import jnpr.junos.op.bgp
-        raw_bgp = jnpr.junos.op.bgp.BgpPeerTable(dev)
+        import jnpr.junos.op.bgppeer
+        raw_bgp = jnpr.junos.op.bgppeer.BgpPeerTable(dev)
         for b in raw_bgp.get():
             bgp_peer = BgpPeer.from_dict(snapshot, node, b)
             roumiga.session.add(bgp_peer)

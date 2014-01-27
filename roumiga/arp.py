@@ -92,7 +92,7 @@ class ArpEntry(DeclarativeBase):
     @classmethod
     def from_dict(self, snapshot, node, data):
         a = ArpEntry(snapshot, node, data['mac_address'], data['ip_address'],
-                data['interface'])
+                data['interface_name'])
 
         return a
 
